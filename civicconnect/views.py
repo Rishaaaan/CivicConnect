@@ -26,7 +26,8 @@ def login_page(request):
 
 def register_page(request):
     # Registration page (requires Firebase Auth token client-side to authorize)
-    return render(request, 'register_user.html')
+    preferred_theme = request.COOKIES.get('cc_theme', 'light')
+    return render(request, 'register_user.html', { 'preferred_theme': preferred_theme })
 
 
 import json
@@ -87,7 +88,6 @@ def verify_token(request):
         'name': decoded.get('name'),
     }
     return JsonResponse({'ok': True})
-
 
 
 @csrf_exempt
@@ -158,7 +158,10 @@ def logout_view(request):
 def admin_dashboard(request):
     if not request.session.get('admin_user'):
         return redirect('login')
-    return render(request, 'civic_admin_dashboard_DarkTheme.html')
+    ctx = {
+        'current_user': request.session.get('admin_user') or {}
+    }
+    return render(request, 'civic_admin_dashboard_DarkTheme.html', ctx)
 
 
 def _require_admin(request):

@@ -1,5 +1,24 @@
+  <style>
+    :root {
+      --bg: #0f1218;
+      --panel: rgba(255,255,255,0.04);
+      --border: #2d3440;
+      --text: #e5e7eb;
+      --muted: #9aa0a6;
+    }
+    [data-theme="light"] {
+      --bg: #f5f7fb;
+      --panel: #ffffff;
+      --border: #e5e7eb;
+      --text: #0b1220;
+      --muted: #4b5563;
+    }
+    html, body { background: var(--bg); color: var(--text); }
+    .card, .login-card { background: var(--panel); border: 1px solid var(--border); }
+    input, button { color: var(--text); }
+  </style>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -118,6 +137,15 @@
   </div>
 
   <!-- Firebase v9 Modular CDN -->
+  <script>
+    // Apply saved theme (default light)
+    (function(){
+      const THEME_KEY = 'cc_theme';
+      let t = 'light';
+      try { t = localStorage.getItem(THEME_KEY) || 'light'; } catch(e) {}
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js';

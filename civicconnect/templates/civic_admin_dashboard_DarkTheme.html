@@ -7,6 +7,27 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
     <style>
+        :root {
+            --bg: #0f1218;
+            --panel: rgba(255,255,255,0.04);
+            --border: #2d3440;
+            --text: #e5e7eb;
+            --muted: #9aa0a6;
+            --brand: #2563eb;
+            --brand-2: #1d4ed8;
+            --tray-gradient: linear-gradient(180deg, rgba(0,0,0,0), rgba(0,0,0,0.6));
+        }
+        [data-theme="light"] {
+            --bg: #f5f7fb;
+            --panel: #ffffff;
+            --border: #e5e7eb;
+            --text: #0b1220;
+            --muted: #4b5563;
+            --brand: #2563eb;
+            --brand-2: #1d4ed8;
+            --tray-gradient: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,255,255,0.95));
+        }
+        html, body { background: var(--bg); color: var(--text); }
         * {
             margin: 0;
             padding: 0;
@@ -54,6 +75,72 @@
         ::-webkit-scrollbar-thumb {
             background: transparent;
         }
+
+        /* User menu + theme switch */
+        .user-menu {
+            position: absolute;
+            right: 10px;
+            top: 54px;
+            width: 280px;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+            z-index: 1500;
+        }
+        .user-menu.active { display: block; }
+        .user-profile { padding: 14px 16px; }
+        .user-name { font-weight: 700; color: var(--text); }
+        .user-email { font-size: 12px; color: var(--muted); margin-top: 4px; }
+        .user-menu-sep { height: 1px; background: var(--border); margin: 6px 0; }
+        .user-menu-item, .user-menu-row {
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 10px; padding: 12px 16px; cursor: pointer; color: var(--text);
+        }
+        .user-menu-item:hover, .user-menu-row:hover { background: rgba(0,0,0,0.06); }
+        .user-menu-item i { width: 18px; }
+        .theme-switch { position: relative; display: inline-block; width: 42px; height: 22px; }
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
+        .theme-switch .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: #9aa0a6; transition: 0.2s; border-radius: 9999px; }
+        .theme-switch .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 2px; bottom: 2px; background: #fff; transition: 0.2s; border-radius: 50%; }
+        .theme-switch input:checked + .slider { background: var(--brand); }
+        .theme-switch input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Light theme overrides for key surfaces */
+        [data-theme="light"] .left-sidebar,
+        [data-theme="light"] .right-panel,
+        [data-theme="light"] .filters-panel,
+        [data-theme="light"] .modal,
+        [data-theme="light"] .user-menu,
+        [data-theme="light"] .report-card,
+        [data-theme="light"] .nav-item,
+        [data-theme="light"] .tray-item,
+        [data-theme="light"] .top-bar,
+        [data-theme="light"] .search-input,
+        [data-theme="light"] .filter-input {
+            background: var(--panel) !important;
+            color: var(--text) !important;
+            border-color: var(--border) !important;
+        }
+        [data-theme="light"] .create-btn,
+        [data-theme="light"] .filter-btn.btn-primary { background: linear-gradient(135deg, var(--brand), var(--brand-2)); color: #fff; }
+        [data-theme="light"] .bottom-tray { background: var(--tray-gradient); }
+
+        /* General text/icon color normalization via variables */
+        .top-bar, .control-btn i, .nav-title, .filter-title, .modal-title,
+        .report-title, .report-description, .cluster-meta, .tray-title, .tray-meta,
+        .stats-summary, .nav-item, .popup-content, .popup-header h4, .detail-label, .detail-value {
+            color: var(--text) !important;
+        }
+        .muted, .notification-item .time, .report-meta-item, small, .hint { color: var(--muted) !important; }
+
+        /* Toasts themed */
+        .toast-container { position: fixed; right: 16px; top: 16px; z-index: 3000; }
+        .toast { background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; min-width: 260px; }
+        .toast.success { border-left: 4px solid #22c55e; }
+        .toast.error { border-left: 4px solid #ef4444; }
+        .toast.info { border-left: 4px solid var(--brand); }
 
         * {
             scrollbar-width: none;
@@ -215,7 +302,18 @@
             align-items: center;
             gap: 10px;
             cursor: pointer;
+            border-radius: 8px;
+            transition: background 0.2s ease, color 0.2s ease;
         }
+
+        [data-theme="light"] .user-menu-item {
+            color: #333; /* darker text for light background */
+        }
+
+        [data-theme="light"] .user-menu-item:hover {
+            background: rgba(0, 0, 0, 0.05); /* soft hover highlight */
+        }
+
         .user-menu-item:hover {
             background: rgba(255,255,255,0.06);
         }
@@ -401,6 +499,22 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
         }
+
+        /* Light theme */
+        [data-theme="light"] .map-control-btn {
+            background: linear-gradient(135deg, #ffffff, #e6e6eb);
+            border: 1px solid #b9b8b8d6;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        [data-theme="light"] .map-control-btn:hover {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+
 
         /* Right Filters Panel */
         .right-panel {
@@ -791,7 +905,6 @@
             flex-direction: column;
             gap: 12px;
         }
-
         .toast {
             background: linear-gradient(135deg, #1a1a1b, #2d2d30);
             border: 1px solid #444;
@@ -805,7 +918,25 @@
             transform: translateX(100%);
             animation: slideIn 0.4s ease forwards;
             backdrop-filter: blur(10px);
+            color: #f5f5f5; /* text always visible */
         }
+
+        [data-theme="light"] .toast {
+            background: linear-gradient(135deg, #ffffff, #f2f3f7);
+            border: 1px solid #d9d9e3;
+            border-radius: 12px;
+            padding: 16px 20px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 320px;
+            transform: translateX(100%);
+            animation: slideIn 0.4s ease forwards;
+            backdrop-filter: blur(6px);
+            color: #222; /* dark text for light background */
+        }
+
 
         .toast.success { 
             border-left: 4px solid #22c55e; 
@@ -1387,7 +1518,7 @@
         }
 
         /* Custom map tiles for dark theme */
-        .leaflet-tile-pane {
+        [data-theme="dark"] .leaflet-tile-pane {
             filter: invert(1) hue-rotate(180deg);
         }
 
@@ -1400,6 +1531,7 @@
             color: #888 !important;
             border: 1px solid #333 !important;
         }
+        [data-theme="light"] .fa-bars{color:black}
     </style>
 </head>
 <body>
@@ -1440,6 +1572,19 @@
                 <i class="fas fa-user-circle"></i>
             </button>
             <div class="user-menu" id="userMenu">
+                <div class="user-profile">
+                    <div class="user-name">{{ current_user.name|default:'Admin' }}</div>
+                    <div class="user-email">{{ current_user.email|default:'' }}</div>
+                </div>
+                <div class="user-menu-sep"></div>
+                <div class="user-menu-row">
+                    <span>Theme</span>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <div class="user-menu-item" onclick="window.location.href='/register/'"><i class="fas fa-user-plus"></i> Register New User</div>
                 <div class="user-menu-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</div>
             </div>
         </div>
@@ -1936,14 +2081,22 @@
         const clusters = {};
 
         // Initialize the map
+        let baseLight, baseDark;
         function initMap() {
             map = L.map('map').setView([28.6139, 77.2090], 14);
-            
-            // Use dark-themed tiles
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            // Prepare base layers
+            baseDark = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors',
                 maxZoom: 19
-            }).addTo(map);
+            });
+            baseLight = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+            });
+
+            // Add layer according to theme
+            const theme = document.documentElement.getAttribute('data-theme') || 'light';
+            if (theme === 'dark') { baseDark.addTo(map); } else { baseLight.addTo(map); }
 
             // Markers will be added after reports are fetched
             
@@ -2816,6 +2969,35 @@
                         e.preventDefault();
                     }
                 }, { passive: false });
+            }
+            // Theme: apply saved theme (default light)
+            const THEME_KEY = 'cc_theme';
+            function applyTheme(theme) {
+                const t = theme === 'dark' ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', t);
+                const toggle = document.getElementById('themeToggle');
+                if (toggle) toggle.checked = (t === 'dark');
+                try { localStorage.setItem(THEME_KEY, t); } catch {}
+                // Persist to cookie (1 year)
+                document.cookie = `cc_theme=${t}; path=/; max-age=31536000`;
+                // Update map tiles
+                if (typeof map !== 'undefined' && map) {
+                    if (t === 'dark') {
+                        if (map.hasLayer(baseLight)) map.removeLayer(baseLight);
+                        if (!map.hasLayer(baseDark)) baseDark.addTo(map);
+                    } else {
+                        if (map.hasLayer(baseDark)) map.removeLayer(baseDark);
+                        if (!map.hasLayer(baseLight)) baseLight.addTo(map);
+                    }
+                }
+            }
+            const saved = (() => { try { return localStorage.getItem(THEME_KEY); } catch { return null; } })();
+            applyTheme(saved || 'light');
+            const toggle = document.getElementById('themeToggle');
+            if (toggle) {
+                toggle.addEventListener('change', () => {
+                    applyTheme(toggle.checked ? 'dark' : 'light');
+                });
             }
             
             // Add keyboard shortcuts
