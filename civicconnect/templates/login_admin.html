@@ -112,8 +112,8 @@
 <body>
   <div class="card">
     <div class="header">
-      <div class="logo">CivicSetu Admin</div>
-      <div class="subtitle">Sign in with your admin account to continue</div>
+      <div class="logo">CivicSetu Staff</div>
+      <div class="subtitle">Sign in with your Admin or Department Head account to continue</div>
     </div>
 
     <form class="form" id="loginForm">
@@ -129,7 +129,7 @@
       <button class="btn" id="loginBtn" type="submit">
         <i class="fa-solid fa-right-to-bracket"></i> Sign In
       </button>
-      <div class="hint">Use your Firebase Auth credentials. Only users with role=admin in Firestore can access the dashboard.</div>
+      <div class="hint">Use your Firebase Auth credentials. Only users with role=admin or role=department_head in Firestore can access the dashboard.</div>
       <div class="hint">New user? <a href="/register/" style="color:#93c5fd; text-decoration:none;">Register</a></div>
     </form>
 
@@ -194,7 +194,13 @@
         if (data.ok) {
           window.location.href = '/dashboard/';
         } else {
-          err.textContent = data.error === 'not_admin' ? 'Access denied: not an admin.' : 'Login failed.';
+          if (data.error === 'not_staff') {
+            err.textContent = 'Access denied: only Admins or Department Heads are allowed.';
+          } else if (data.error === 'invalid_token') {
+            err.textContent = 'Invalid token. Please sign in again.';
+          } else {
+            err.textContent = 'Login failed.';
+          }
         }
       } catch (e) {
         err.textContent = e.message || 'Authentication failed.';

@@ -1,0 +1,1477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Civic Analytics Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/date-fns/1.30.1/date_fns.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            overflow-x: auto;
+        }
+
+        .dashboard-container {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: auto;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+            font-size: 1.2rem;
+            color: white;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid white;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin-right: 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .metric-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
+        }
+
+        .metric-icon.reports { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .metric-icon.users { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .metric-icon.resolution { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .metric-icon.response { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2c3e50;
+            line-height: 1;
+        }
+
+        .metric-label {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .metric-change {
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .metric-change.positive { color: #27ae60; }
+        .metric-change.negative { color: #e74c3c; }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+
+        .chart-container h3 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+
+        .analytics-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab-button {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-button.active {
+            background: rgba(255, 255, 255, 0.95);
+            color: #2c3e50;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .department-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .department-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .department-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .department-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .department-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+        }
+
+        .map-container {
+            height: 400px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6c757d;
+        }
+
+        .response-time-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .response-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .response-time {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .response-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .filters-bar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 1rem 2rem;
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .filter-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            font-size: 0.9rem;
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            margin-left: auto;
+        }
+
+        .export-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .trend-up { color: #27ae60; }
+        .trend-down { color: #e74c3c; }
+        .trend-stable { color: #f39c12; }
+
+        .kpi-comparison {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .comparison-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .comparison-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .comparison-vs {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            margin: 0.5rem 0;
+        }
+
+        .heatmap-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin: 1rem 0;
+        }
+
+        .heatmap-cell {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .heatmap-cell:hover {
+            transform: scale(1.1);
+        }
+
+        .alert-section {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            border-radius: 12px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .alert-title {
+            color: #e74c3c;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .export-btn {
+                margin-left: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header class="header">
+            <h1><i class="fas fa-chart-line"></i> Civic Analytics Dashboard</h1>
+            <div class="user-info">
+                <span>{{ current_user.name|default:"Admin" }}</span>
+                <span class="badge">{{ current_user.role|default:"admin"|title }}</span>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div id="loading" class="loading-spinner">
+                <div class="spinner"></div>
+                Loading analytics data...
+            </div>
+
+            <div id="dashboard-content" style="display: none;">
+                <!-- Filters Bar -->
+                <div class="filters-bar">
+                    <label>Time Period:</label>
+                    <select id="timeFilter" class="filter-select">
+                        <option value="30">Last 30 Days</option>
+                        <option value="90" selected>Last 3 Months</option>
+                        <option value="180">Last 6 Months</option>
+                        <option value="365">Last Year</option>
+                    </select>
+                    
+                    <label>Department:</label>
+                    <select id="departmentFilter" class="filter-select">
+                        <option value="">All Departments</option>
+                    </select>
+                    
+                    <label>Priority:</label>
+                    <select id="priorityFilter" class="filter-select">
+                        <option value="">All Priorities</option>
+                        <option value="high">High</option>
+                        <option value="medium">Medium</option>
+                        <option value="low">Low</option>
+                    </select>
+                    
+                    <button class="export-btn" onclick="exportData()">
+                        <i class="fas fa-download"></i> Export Report
+                    </button>
+                </div>
+
+                <!-- Key Metrics -->
+                <div class="metrics-grid" id="metricsGrid">
+                    <!-- Metrics will be populated by JavaScript -->
+                </div>
+
+                <!-- Analytics Tabs -->
+                <div class="analytics-tabs">
+                    <button class="tab-button active" onclick="switchTab('trends')">
+                        <i class="fas fa-chart-line"></i> Trends
+                    </button>
+                    <button class="tab-button" onclick="switchTab('departments')">
+                        <i class="fas fa-building"></i> Departments
+                    </button>
+                    <button class="tab-button" onclick="switchTab('geography')">
+                        <i class="fas fa-map"></i> Geography
+                    </button>
+                    <button class="tab-button" onclick="switchTab('performance')">
+                        <i class="fas fa-tachometer-alt"></i> Performance
+                    </button>
+                </div>
+
+                <!-- Trends Tab -->
+                <div id="trends-tab" class="tab-content active">
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3><i class="fas fa-chart-line"></i> Reports Trend</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="trendsChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h3><i class="fas fa-chart-pie"></i> Status Distribution</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="statusChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3><i class="fas fa-chart-bar"></i> Monthly Comparison</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="monthlyChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h3><i class="fas fa-exclamation-triangle"></i> Priority Breakdown</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="priorityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Heatmap -->
+                    <div class="chart-container">
+                        <h3><i class="fas fa-th"></i> Activity Heatmap (Last 7 Days)</h3>
+                        <div id="activityHeatmap" class="heatmap-grid">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Departments Tab -->
+                <div id="departments-tab" class="tab-content">
+                    <div class="department-grid" id="departmentGrid">
+                        <!-- Department cards will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Geography Tab -->
+                <div id="geography-tab" class="tab-content">
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3><i class="fas fa-map-marked-alt"></i> Geographic Distribution</h3>
+                            <div class="map-container">
+                                <i class="fas fa-map fa-3x"></i>
+                                <p>Interactive map will be displayed here</p>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h3><i class="fas fa-city"></i> Top Cities</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="cityChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="kpi-comparison" id="cityComparison">
+                        <!-- City comparison cards will be populated -->
+                    </div>
+                </div>
+
+                <!-- Performance Tab -->
+                <div id="performance-tab" class="tab-content">
+                    <div class="response-time-grid" id="responseTimeGrid">
+                        <!-- Response time cards will be populated -->
+                    </div>
+                    
+                    <div class="charts-grid">
+                        <div class="chart-container">
+                            <h3><i class="fas fa-clock"></i> Response Time Trends</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="responseChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <h3><i class="fas fa-percentage"></i> Performance Metrics</h3>
+                            <div class="chart-wrapper">
+                                <canvas id="performanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Alerts -->
+                    <div class="alert-section" id="performanceAlerts" style="display: none;">
+                        <div class="alert-title">
+                            <i class="fas fa-exclamation-triangle"></i> Performance Alerts
+                        </div>
+                        <div id="alertsList">
+                            <!-- Alerts will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Global variables
+        let currentTab = 'trends';
+        let analyticsData = {};
+        let charts = {};
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAnalyticsData();
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            document.getElementById('timeFilter').addEventListener('change', loadAnalyticsData);
+            document.getElementById('departmentFilter').addEventListener('change', loadAnalyticsData);
+            document.getElementById('priorityFilter').addEventListener('change', loadAnalyticsData);
+        }
+
+        function buildQueryParams() {
+            const days = document.getElementById('timeFilter').value || '90';
+            const department = document.getElementById('departmentFilter').value || '';
+            const priority = document.getElementById('priorityFilter').value || '';
+            const params = new URLSearchParams({ days });
+            if (department) params.set('department', department);
+            if (priority) params.set('priority', priority);
+            return params.toString();
+        }
+
+        async function loadAnalyticsData() {
+            showLoading();
+            
+            try {
+                // Load all analytics data in parallel
+                const reqInit = { credentials: 'include' };
+                const qs = buildQueryParams();
+                console.log('[Analytics] Loading with filters:', Object.fromEntries(new URLSearchParams(qs)));
+                const [overview, trends, departments, geographic, responseTimes] = await Promise.all([
+                    fetch(`/api/analytics/overview/?${qs}`, reqInit).then(r => r.json()),
+                    fetch(`/api/analytics/trends/?${qs}`, reqInit).then(r => r.json()),
+                    fetch(`/api/analytics/departments/?${qs}`, reqInit).then(r => r.json()),
+                    fetch(`/api/analytics/geographic/?${qs}`, reqInit).then(r => r.json()),
+                    fetch(`/api/analytics/response-times/?${qs}`, reqInit).then(r => r.json())
+                ]);
+
+                if (overview.ok && trends.ok && departments.ok && geographic.ok && responseTimes.ok) {
+                    analyticsData = {
+                        overview: overview.data,
+                        trends: trends.data,
+                        departments: departments.data,
+                        geographic: geographic.data,
+                        responseTimes: responseTimes.data
+                    };
+                    console.log('[Analytics] Overview:', analyticsData.overview);
+                    console.log('[Analytics] Trends points:', analyticsData.trends?.daily_trends?.length || 0, 'monthly:', analyticsData.trends?.monthly_trends?.length || 0);
+                    console.log('[Analytics] Departments keys:', Object.keys(analyticsData.departments || {}).length);
+                    console.log('[Analytics] Geographic cities:', Object.keys(analyticsData.geographic || {}).length);
+                    console.log('[Analytics] Response summary:', analyticsData.responseTimes);
+                    renderDashboard();
+                } else {
+                    throw new Error('Failed to load analytics data');
+                }
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+                showError('Failed to load analytics data. Please try again.');
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('dashboard-content').style.display = 'none';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('dashboard-content').style.display = 'block';
+        }
+
+        function showError(message) {
+            document.getElementById('loading').innerHTML = `
+                <div style="text-align: center; color: #e74c3c;">
+                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                    <p style="margin-top: 1rem;">${message}</p>
+                    <button onclick="loadAnalyticsData()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Retry
+                    </button>
+                </div>
+            `;
+        }
+
+        function renderDashboard() {
+            renderMetrics();
+            renderCharts();
+            renderDepartments();
+            renderGeography();
+            renderPerformance();
+            populateFilters();
+        }
+
+        function renderMetrics() {
+            const { overview } = analyticsData;
+            const metricsGrid = document.getElementById('metricsGrid');
+            console.log('[Render] Metrics overview:', overview);
+            
+            const metrics = [
+                {
+                    icon: 'fas fa-file-alt',
+                    iconClass: 'reports',
+                    value: overview.total_reports?.toLocaleString() || '0',
+                    label: 'Total Reports',
+                    change: `+${overview.reports_this_month || 0} this month`,
+                    changeClass: 'positive'
+                },
+                {
+                    icon: 'fas fa-users',
+                    iconClass: 'users',
+                    value: overview.total_users?.toLocaleString() || '0',
+                    label: 'Active Users',
+                    change: `${overview.reports_today || 0} reports today`,
+                    changeClass: 'positive'
+                },
+                {
+                    icon: 'fas fa-check-circle',
+                    iconClass: 'resolution',
+                    value: `${overview.resolution_rate || 0}%`,
+                    label: 'Resolution Rate',
+                    change: overview.resolution_rate >= 80 ? 'Excellent' : 'Needs Improvement',
+                    changeClass: overview.resolution_rate >= 80 ? 'positive' : 'negative'
+                },
+                {
+                    icon: 'fas fa-clock',
+                    iconClass: 'response',
+                    value: `${overview.avg_response_hours || 0}h`,
+                    label: 'Avg Response Time',
+                    change: overview.avg_response_hours <= 48 ? 'Within Target' : 'Above Target',
+                    changeClass: overview.avg_response_hours <= 48 ? 'positive' : 'negative'
+                }
+            ];
+
+            metricsGrid.innerHTML = metrics.map(metric => `
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <div class="metric-icon ${metric.iconClass}">
+                            <i class="${metric.icon}"></i>
+                        </div>
+                    </div>
+                    <div class="metric-value">${metric.value}</div>
+                    <div class="metric-label">${metric.label}</div>
+                    <div class="metric-change ${metric.changeClass}">
+                        ${metric.change}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderCharts() {
+            const { overview, trends } = analyticsData;
+            console.log('[Render] Charts with trends/overview', { trends, overview });
+
+            // Trends Chart
+            if (charts.trends) charts.trends.destroy();
+            const trendsCtx = document.getElementById('trendsChart').getContext('2d');
+            charts.trends = new Chart(trendsCtx, {
+                type: 'line',
+                data: {
+                    labels: trends.daily_trends?.map(d => new Date(d.date).toLocaleDateString()) || [],
+                    datasets: [
+                        {
+                            label: 'Reports Created',
+                            data: trends.daily_trends?.map(d => d.reports) || [],
+                            borderColor: '#667eea',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Reports Resolved',
+                            data: trends.daily_trends?.map(d => d.resolved) || [],
+                            borderColor: '#27ae60',
+                            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // Status Chart
+            if (charts.status) charts.status.destroy();
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            const statusData = overview.status_distribution || {};
+            charts.status = new Chart(statusCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(statusData),
+                    datasets: [{
+                        data: Object.values(statusData),
+                        backgroundColor: [
+                            '#e74c3c',
+                            '#f39c12',
+                            '#27ae60',
+                            '#3498db',
+                            '#9b59b6'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Monthly Chart
+            if (charts.monthly) charts.monthly.destroy();
+            const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+            charts.monthly = new Chart(monthlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: trends.monthly_trends?.map(m => m.month) || [],
+                    datasets: [
+                        {
+                            label: 'Reports',
+                            data: trends.monthly_trends?.map(m => m.reports) || [],
+                            backgroundColor: '#667eea'
+                        },
+                        {
+                            label: 'Resolved',
+                            data: trends.monthly_trends?.map(m => m.resolved) || [],
+                            backgroundColor: '#27ae60'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+
+            // Priority Chart
+            if (charts.priority) charts.priority.destroy();
+            const priorityCtx = document.getElementById('priorityChart').getContext('2d');
+            const priorityData = overview.priority_distribution || {};
+            charts.priority = new Chart(priorityCtx, {
+                type: 'polarArea',
+                data: {
+                    labels: Object.keys(priorityData),
+                    datasets: [{
+                        data: Object.values(priorityData),
+                        backgroundColor: [
+                            '#e74c3c',
+                            '#f39c12',
+                            '#27ae60'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Activity Heatmap
+            renderActivityHeatmap();
+        }
+
+        function renderActivityHeatmap() {
+            const heatmapContainer = document.getElementById('activityHeatmap');
+            const { trends } = analyticsData;
+            
+            // Generate last 7 days heatmap
+            const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+            const hours = Array.from({length: 24}, (_, i) => i);
+            
+            // Mock heatmap data (in real implementation, you'd calculate from actual data)
+            let heatmapHTML = '';
+            days.forEach(day => {
+                hours.forEach(hour => {
+                    const intensity = Math.random(); // Mock data
+                    const color = `rgba(102, 126, 234, ${intensity})`;
+                    const count = Math.floor(Math.random() * 50);
+                    heatmapHTML += `
+                        <div class="heatmap-cell" 
+                             style="background-color: ${color}" 
+                             title="${day} ${hour}:00 - ${count} reports">
+                            ${count > 30 ? count : ''}
+                        </div>
+                    `;
+                });
+            });
+            
+            heatmapContainer.innerHTML = heatmapHTML;
+        }
+
+        function renderDepartments() {
+            const { departments } = analyticsData;
+            const departmentGrid = document.getElementById('departmentGrid');
+            console.log('[Render] Departments count:', Object.keys(departments || {}).length);
+            
+            let departmentHTML = '';
+            Object.entries(departments).forEach(([deptName, data]) => {
+                departmentHTML += `
+                    <div class="department-card">
+                        <div class="department-name">${deptName}</div>
+                        <div class="department-stats">
+                            <div class="stat-item">
+                                <span>Total Reports:</span>
+                                <strong>${data.total_reports}</strong>
+                            </div>
+                            <div class="stat-item">
+                                <span>Resolution Rate:</span>
+                                <strong>${data.resolution_rate}%</strong>
+                            </div>
+                            <div class="stat-item">
+                                <span>Pending:</span>
+                                <strong>${data.pending}</strong>
+                            </div>
+                            <div class="stat-item">
+                                <span>Resolved:</span>
+                                <strong>${data.resolved}</strong>
+                            </div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${data.resolution_rate}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            departmentGrid.innerHTML = departmentHTML;
+        }
+
+        function renderGeography() {
+            const { overview, geographic } = analyticsData;
+            console.log('[Render] Geography with top cities and geo data', { top_cities: overview?.top_cities, geographic });
+            
+            // City Chart
+            if (charts.city) charts.city.destroy();
+            const cityCtx = document.getElementById('cityChart').getContext('2d');
+            const topCities = overview.top_cities || {};
+            charts.city = new Chart(cityCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(topCities),
+                    datasets: [{
+                        label: 'Reports',
+                        data: Object.values(topCities),
+                        backgroundColor: '#667eea'
+                    }]
+                },
+                options: {
+                    indexAxis: 'y', // horizontal bars in Chart.js v3+
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: { beginAtZero: true }
+                    }
+                }
+            });
+            
+            // City comparison cards
+            const cityComparison = document.getElementById('cityComparison');
+            let comparisonHTML = '';
+            Object.entries(geographic).slice(0, 4).forEach(([cityName, data]) => {
+                comparisonHTML += `
+                    <div class="comparison-card">
+                        <div class="comparison-value">${data.total_reports}</div>
+                        <div class="comparison-vs">${cityName}</div>
+                        <div class="trend-indicator ${data.resolution_rate >= 80 ? 'trend-up' : 'trend-down'}">
+                            <i class="fas fa-arrow-${data.resolution_rate >= 80 ? 'up' : 'down'}"></i>
+                            ${data.resolution_rate}% resolved
+                        </div>
+                    </div>
+                `;
+            });
+            cityComparison.innerHTML = comparisonHTML;
+        }
+
+        function renderPerformance() {
+            const { responseTimes } = analyticsData;
+            console.log('[Render] Performance responseTimes:', responseTimes);
+            
+            // Response time cards
+            const responseTimeGrid = document.getElementById('responseTimeGrid');
+            const responseCards = [
+                {
+                    time: responseTimes.overall_avg_hours || 0,
+                    label: 'Overall Average',
+                    unit: 'hours'
+                },
+                {
+                    time: responseTimes.priority_avg_hours?.high || 0,
+                    label: 'High Priority',
+                    unit: 'hours'
+                },
+                {
+                    time: responseTimes.priority_avg_hours?.medium || 0,
+                    label: 'Medium Priority', 
+                    unit: 'hours'
+                },
+                {
+                    time: responseTimes.priority_avg_hours?.low || 0,
+                    label: 'Low Priority',
+                    unit: 'hours'
+                }
+            ];
+            
+            responseTimeGrid.innerHTML = responseCards.map(card => `
+                <div class="response-card">
+                    <div class="response-time">${Math.round(card.time)}</div>
+                    <div class="response-label">${card.unit}</div>
+                    <div class="response-label">${card.label}</div>
+                </div>
+            `).join('');
+            
+            // Response Chart
+            if (charts.response) charts.response.destroy();
+            const responseCtx = document.getElementById('responseChart').getContext('2d');
+            charts.response = new Chart(responseCtx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(responseTimes.department_avg_hours || {}),
+                    datasets: [{
+                        label: 'Average Response Hours',
+                        data: Object.values(responseTimes.department_avg_hours || {}),
+                        backgroundColor: '#667eea'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Performance Chart
+            if (charts.performance) charts.performance.destroy();
+            const performanceCtx = document.getElementById('performanceChart').getContext('2d');
+            const responseDistribution = responseTimes.response_time_distribution || {};
+            charts.performance = new Chart(performanceCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(responseDistribution),
+                    datasets: [{
+                        data: Object.values(responseDistribution),
+                        backgroundColor: [
+                            '#27ae60',
+                            '#f39c12',
+                            '#e67e22',
+                            '#e74c3c'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Performance alerts
+            checkPerformanceAlerts();
+        }
+
+        function checkPerformanceAlerts() {
+            const { overview, responseTimes } = analyticsData;
+            const alertsSection = document.getElementById('performanceAlerts');
+            const alertsList = document.getElementById('alertsList');
+            
+            let alerts = [];
+            
+            // Check for performance issues
+            if (overview.resolution_rate < 70) {
+                alerts.push('Resolution rate below 70% - requires immediate attention');
+            }
+            
+            if (responseTimes.overall_avg_hours > 72) {
+                alerts.push('Average response time exceeds 72 hours');
+            }
+            
+            if (overview.reports_today > overview.total_reports * 0.1) {
+                alerts.push('Unusually high number of reports today');
+            }
+            
+            if (alerts.length > 0) {
+                alertsList.innerHTML = alerts.map(alert => `
+                    <div style="padding: 0.5rem 0; border-bottom: 1px solid rgba(231, 76, 60, 0.2);">
+                        <i class="fas fa-exclamation-circle"></i> ${alert}
+                    </div>
+                `).join('');
+                alertsSection.style.display = 'block';
+            } else {
+                alertsSection.style.display = 'none';
+            }
+        }
+
+        function populateFilters() {
+            const { overview, departments } = analyticsData;
+            const departmentFilter = document.getElementById('departmentFilter');
+            
+            // Populate department filter
+            departmentFilter.innerHTML = '<option value="">All Departments</option>';
+            Object.keys(departments).forEach(dept => {
+                departmentFilter.innerHTML += `<option value="${dept}">${dept}</option>`;
+            });
+        }
+
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+            
+            currentTab = tabName;
+        }
+
+        function exportData() {
+            const exportData = {
+                timestamp: new Date().toISOString(),
+                overview: analyticsData.overview,
+                summary: {
+                    total_reports: analyticsData.overview.total_reports,
+                    resolution_rate: analyticsData.overview.resolution_rate,
+                    avg_response_hours: analyticsData.overview.avg_response_hours,
+                    top_departments: analyticsData.overview.top_departments,
+                    top_cities: analyticsData.overview.top_cities
+                },
+                departments: analyticsData.departments,
+                geographic: analyticsData.geographic,
+                response_times: analyticsData.responseTimes
+            };
+            
+            // Create and download CSV
+            const csvContent = convertToCSV(exportData);
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `civic_analytics_${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        function convertToCSV(data) {
+            let csv = 'Civic Analytics Report\n';
+            csv += `Generated: ${new Date().toLocaleString()}\n\n`;
+            
+            // Overview section
+            csv += 'OVERVIEW METRICS\n';
+            csv += 'Metric,Value\n';
+            csv += `Total Reports,${data.overview.total_reports}\n`;
+            csv += `Total Users,${data.overview.total_users}\n`;
+            csv += `Resolution Rate,${data.overview.resolution_rate}%\n`;
+            csv += `Average Response Time,${data.overview.avg_response_hours} hours\n`;
+            csv += `Reports Today,${data.overview.reports_today}\n`;
+            csv += `Reports This Week,${data.overview.reports_this_week}\n`;
+            csv += `Reports This Month,${data.overview.reports_this_month}\n\n`;
+            
+            // Department breakdown
+            csv += 'DEPARTMENT BREAKDOWN\n';
+            csv += 'Department,Total Reports,Resolved,Pending,Resolution Rate\n';
+            Object.entries(data.departments).forEach(([dept, info]) => {
+                csv += `${dept},${info.total_reports},${info.resolved},${info.pending},${info.resolution_rate}%\n`;
+            });
+            csv += '\n';
+            
+            // Geographic breakdown
+            csv += 'GEOGRAPHIC BREAKDOWN\n';
+            csv += 'City,Total Reports,Resolved,Resolution Rate\n';
+            Object.entries(data.geographic).forEach(([city, info]) => {
+                csv += `${city},${info.total_reports},${info.resolved},${info.resolution_rate}%\n`;
+            });
+            csv += '\n';
+            
+            // Response times
+            csv += 'RESPONSE TIMES\n';
+            csv += 'Category,Average Hours\n';
+            csv += `Overall,${data.response_times.overall_avg_hours}\n`;
+            Object.entries(data.response_times.department_avg_hours || {}).forEach(([dept, hours]) => {
+                csv += `${dept},${hours}\n`;
+            });
+            
+            return csv;
+        }
+
+        // Real-time updates (optional)
+        function startRealTimeUpdates() {
+            // Refresh data every 5 minutes
+            setInterval(() => {
+                loadAnalyticsData();
+            }, 5 * 60 * 1000);
+        }
+
+        // Auto-refresh functionality
+        function toggleAutoRefresh() {
+            const isEnabled = localStorage.getItem('autoRefresh') === 'true';
+            if (isEnabled) {
+                localStorage.setItem('autoRefresh', 'false');
+                clearInterval(window.refreshInterval);
+            } else {
+                localStorage.setItem('autoRefresh', 'true');
+                window.refreshInterval = setInterval(loadAnalyticsData, 2 * 60 * 1000); // 2 minutes
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        switchTab('trends');
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        switchTab('departments');
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        switchTab('geography');
+                        break;
+                    case '4':
+                        e.preventDefault();
+                        switchTab('performance');
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        loadAnalyticsData();
+                        break;
+                    case 'e':
+                        e.preventDefault();
+                        exportData();
+                        break;
+                }
+            }
+        });
+
+        // Tooltip functionality
+        function initializeTooltips() {
+            const elements = document.querySelectorAll('[title]');
+            elements.forEach(element => {
+                element.addEventListener('mouseenter', function(e) {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip';
+                    tooltip.textContent = this.getAttribute('title');
+                    tooltip.style.cssText = `
+                        position: absolute;
+                        background: rgba(0, 0, 0, 0.8);
+                        color: white;
+                        padding: 0.5rem;
+                        border-radius: 4px;
+                        font-size: 0.8rem;
+                        z-index: 1000;
+                        pointer-events: none;
+                        white-space: nowrap;
+                    `;
+                    document.body.appendChild(tooltip);
+                    
+                    const rect = this.getBoundingClientRect();
+                    tooltip.style.left = rect.left + 'px';
+                    tooltip.style.top = (rect.top - tooltip.offsetHeight - 5) + 'px';
+                    
+                    this.addEventListener('mouseleave', function() {
+                        tooltip.remove();
+                    }, { once: true });
+                });
+            });
+        }
+
+        // Initialize tooltips after content is loaded
+        setTimeout(initializeTooltips, 1000);
+
+        // Dark mode toggle (optional)
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
+        }
+
+        // Load dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        // Performance optimization: debounce resize events
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(function() {
+                Object.values(charts).forEach(chart => {
+                    if (chart && typeof chart.resize === 'function') {
+                        chart.resize();
+                    }
+                });
+            }, 250);
+        });
+
+        // Add CSS for dark mode
+        const darkModeStyles = `
+            .dark-mode {
+                background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            }
+            .dark-mode .metric-card,
+            .dark-mode .chart-container,
+            .dark-mode .department-card,
+            .dark-mode .filters-bar {
+                background: rgba(52, 73, 94, 0.9);
+                color: white;
+            }
+            .dark-mode .metric-value,
+            .dark-mode .department-name {
+                color: white;
+            }
+        `;
+        
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = darkModeStyles;
+        document.head.appendChild(styleSheet);
+
+        // Add refresh indicator
+        function showRefreshIndicator() {
+            const indicator = document.createElement('div');
+            indicator.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: rgba(102, 126, 234, 0.9);
+                color: white;
+                padding: 0.5rem 1rem;
+                border-radius: 20px;
+                font-size: 0.9rem;
+                z-index: 1001;
+                animation: fadeInOut 2s ease-in-out;
+            `;
+            indicator.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Refreshing...';
+            document.body.appendChild(indicator);
+            
+            setTimeout(() => {
+                indicator.remove();
+            }, 2000);
+        }
+
+        // Add fadeInOut animation
+        const refreshStyles = `
+            @keyframes fadeInOut {
+                0% { opacity: 0; transform: translateY(-10px); }
+                50% { opacity: 1; transform: translateY(0); }
+                100% { opacity: 0; transform: translateY(-10px); }
+            }
+        `;
+        
+        const refreshStyleSheet = document.createElement('style');
+        refreshStyleSheet.textContent = refreshStyles;
+        document.head.appendChild(refreshStyleSheet);
+
+        // Enhanced error handling
+        window.addEventListener('unhandledrejection', function(event) {
+            console.error('Unhandled promise rejection:', event.reason);
+            showError('An unexpected error occurred. Please refresh the page.');
+        });
+
+        window.addEventListener('error', function(event) {
+            console.error('JavaScript error:', event.error);
+            showError('An error occurred while loading the dashboard.');
+        });
+
+        // Performance monitoring
+        function trackPerformance() {
+            if ('performance' in window) {
+                window.addEventListener('load', function() {
+                    setTimeout(function() {
+                        const perfData = performance.getEntriesByType('navigation')[0];
+                        console.log('Dashboard load time:', perfData.loadEventEnd - perfData.loadEventStart, 'ms');
+                    }, 0);
+                });
+            }
+        }
+
+        trackPerformance();
+
+        // Add accessibility improvements
+        document.addEventListener('keydown', function(e) {
+            // ESC to close any open modals/dropdowns
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.tooltip').forEach(tooltip => tooltip.remove());
+            }
+            
+            // Tab navigation improvements
+            if (e.key === 'Tab') {
+                document.querySelectorAll(':focus').forEach(el => {
+                    el.style.outline = '2px solid #667eea';
+                });
+            }
+        });
+
+        // Initialize everything when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                console.log('Civic Analytics Dashboard initialized');
+                // Auto-refresh if enabled
+                if (localStorage.getItem('autoRefresh') === 'true') {
+                    window.refreshInterval = setInterval(loadAnalyticsData, 2 * 60 * 1000);
+                }
+            });
+        }
+    </script>
+</body>
+</html>

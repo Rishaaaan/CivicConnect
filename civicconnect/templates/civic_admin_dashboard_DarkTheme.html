@@ -183,7 +183,7 @@
             background: rgba(255,255,255,0.1);
             transform: scale(1.05);
         }
-
+        .option{background: #0a0a0b;}
         .search-container {
             flex: 1;
             max-width: 600px;
@@ -627,7 +627,7 @@
             color: #e0e0e0;
             transition: all 0.3s ease;
         }
-
+        
         .filter-input:focus {
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
@@ -850,6 +850,7 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
             display: flex;
             flex-direction: column;
+            padding: 3px; /* inner edge padding as requested */
         }
 
         .modal-overlay.active .modal {
@@ -857,7 +858,7 @@
         }
 
         .modal-header {
-            padding: 24px;
+            padding: 12px;
             border-bottom: 1px solid #333;
             display: flex;
             align-items: center;
@@ -891,9 +892,132 @@
         .modal-content {
             padding: 24px;
             flex: 1;
-            overflow-y: auto;
+            overflow-y: auto; /* allow modal content to scroll when needed */
             overflow-x: hidden;
         }
+
+        /* Modal content layout */
+        .report-layout {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 18px;
+            align-items: start;
+        }
+        .media-column {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .info-column {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .panel-box {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+        }
+        .panel-header-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .caption-scroll {
+            max-height: 180px;
+            overflow: auto;
+        }
+
+        /* Ask Gemini button that morphs into panel */
+        .ai-fab {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 10px 16px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 8px 24px rgba(59,130,246,0.35);
+            cursor: pointer;
+            transition: all 0.35s ease;
+        }
+        .ai-fab i { font-size: 16px; }
+        .ai-fab:hover { transform: translateY(-2px); }
+
+        .ai-panel {
+            width: 100%;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            transition: max-height 0.35s ease, opacity 0.35s ease, padding 0.35s ease;
+            max-height: 0;
+            opacity: 0;
+            overflow: hidden;
+        }
+        .ai-panel.open {
+            max-height: 260px;
+            opacity: 1;
+        }
+        .ai-panel .ai-panel-content { height: 210px; overflow: auto; white-space: pre-wrap; }
+        .ai-panel .header { font-weight: 700; margin-bottom: 8px; display:flex; align-items:center; gap:8px; }
+
+        /* AI Assist containers */
+        .ai-row {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .ai-box {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.25);
+            transition: all 0.35s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 56px;
+        }
+        [data-theme="light"] .ai-box { box-shadow: 0 6px 16px rgba(0,0,0,0.08); }
+
+        .ai-box h5 {
+            margin-bottom: 8px;
+            font-size: 14px;
+            letter-spacing: 0.3px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ai-box .scrollable {
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            padding: 10px;
+            overflow: auto;
+            color: var(--text);
+        }
+        .caption-box .scrollable { height: 220px; }
+        .fix-box.collapsed { cursor: pointer; }
+        .fix-box.collapsed .scrollable { height: 56px; display: flex; align-items: center; justify-content: center; color: var(--muted); }
+        .fix-box.expanded .scrollable { height: 220px; }
+        .fix-action {
+            margin-top: 10px;
+            align-self: flex-end;
+            display: none;
+        }
+        .fix-box.expanded .fix-action { display: inline-block; }
+        .ai-hint { color: var(--muted); font-size: 12px; }
 
         /* Toast Notifications */
         .toast-container {
@@ -1264,6 +1388,20 @@
             gap: 8px;
         }
 
+        /* Ensure inline selects in actions match button sizing */
+        .popup-actions select.filter-input,
+        .action-buttons select.filter-input {
+            width: auto;
+            min-width: 220px;
+            max-width: 280px;
+            margin-bottom: 0;
+            padding: 10px 16px;
+            border: 1px solid #444;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.05);
+            color: #e0e0e0;
+        }
+
         .popup-btn {
             flex: 1;
             background: linear-gradient(135deg, #3b82f6, #1d4ed8);
@@ -1532,6 +1670,7 @@
             border: 1px solid #333 !important;
         }
         [data-theme="light"] .fa-bars{color:black}
+
     </style>
 </head>
 <body>
@@ -1590,13 +1729,30 @@
         </div>
     </div>
 
+    <script>
+        // Expose current user role/department/email to the frontend for RBAC
+        window.currentUserRole = '{{ current_user.role|default:"admin" }}';
+        window.currentUserDepartment = '{{ current_user.department|default:""|lower }}';
+        window.currentUserEmail = '{{ current_user.email|default:"" }}';
+
+        // Hide department visibility and assignment options for department heads
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.currentUserRole === 'department_head') {
+                const sec = document.getElementById('deptVisibilitySection');
+                if (sec) sec.style.display = 'none';
+                const bulkNav = document.getElementById('bulkAssignNav');
+                if (bulkNav) bulkNav.style.display = 'none';
+            }
+        });
+    </script>
+
     <!-- Main Layout -->
     <div class="main-layout">
         <!-- Left Sidebar -->
         <div class="left-sidebar" id="leftSidebar">
             <div class="sidebar-header">
                 <div class="app-logo">CivicSetu</div>
-                <div class="stats-summary">2,847 open reports • 47 high priority • 12 departments active</div>
+                <div class="stats-summary">Lets bring the Resolution</div>
             </div>
             
             <div class="nav-section">
@@ -1613,7 +1769,7 @@
                     <i class="fas fa-list"></i>
                     Reports
                 </a>
-                <a href="#" class="nav-item">
+                <a href="#" class="nav-item" id="assignmentsNav">
                     <i class="fas fa-tasks"></i>
                     Assignments
                 </a>
@@ -1621,7 +1777,7 @@
                     <i class="fas fa-building"></i>
                     Departments
                 </a>
-                <a href="#" class="nav-item">
+                <a href="/analytics" class="nav-item">
                     <i class="fas fa-chart-pie"></i>
                     Analytics
                 </a>
@@ -1641,7 +1797,7 @@
                     <i class="fas fa-plus"></i>
                     Create Report
                 </a>
-                <a href="#" class="nav-item" onclick="bulkAssign()">
+                <a href="#" class="nav-item" onclick="bulkAssign()" id="bulkAssignNav">
                     <i class="fas fa-user-plus"></i>
                     Bulk Assign
                 </a>
@@ -1651,7 +1807,7 @@
                 </a>
             </div>
             
-            <div class="nav-section">
+            <div class="nav-section" id="deptVisibilitySection">
                 <div class="nav-title">Department Visibility</div>
                 <div class="department-toggles">
                     <div class="department-item">
@@ -1861,7 +2017,7 @@
     <!-- Firebase v9 Modular for Firestore Realtime -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
-        import { getFirestore, collection, query, orderBy, onSnapshot, limit as fbLimit, doc, getDoc, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
+        import { getFirestore, collection, query, orderBy, onSnapshot, limit as fbLimit, doc, getDoc, addDoc, serverTimestamp, updateDoc, arrayUnion } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js';
 
         const firebaseConfig = {
           apiKey: "AIzaSyAzXCmqnTaoAs-e6cx0KrPVMiK3csbEtXU",
@@ -1904,6 +2060,7 @@
             // fallbacks
             if (!out.image_url && out.image) out.image_url = out.image;
             if (!out.user_description && out.description) out.user_description = out.description;
+            if (!out.department && out.type) out.department = String(out.type).toLowerCase();
             if (!out.title) {
                 const kw = Array.isArray(out.keywords) ? out.keywords : [];
                 out.title = kw.length ? kw.join(', ') : `${(out.department||'report')}`;
@@ -1922,6 +2079,11 @@
             const q = query(collection(dbClient, 'reports'), orderBy('created_at', 'desc'), fbLimit(200));
             onSnapshot(q, async (snapshot) => {
                 let items = snapshot.docs.map(normalizeReport);
+                // RBAC: if department_head, restrict items to their department
+                if (window.currentUserRole === 'department_head') {
+                    const dept = String(window.currentUserDepartment || '').toLowerCase();
+                    if (dept) items = items.filter(r => String(r.department || '').toLowerCase() === dept);
+                }
                 // Enrich reporter_name from users collection
                 const ids = Array.from(new Set(items.map(r => r.user_id).filter(Boolean)));
                 const nameCache = {};
@@ -1945,8 +2107,13 @@
                 try { if (typeof activeFilters !== 'undefined') { activeFilters = window.activeFilters; } } catch {}
                 // auto include departments visible
                 const depts = Array.from(new Set((items||[]).map(r => (r.department||'').toLowerCase()).filter(Boolean)));
-                const set = new Set([...(window.activeFilters && window.activeFilters.departments ? window.activeFilters.departments : []), ...depts]);
-                window.activeFilters.departments = Array.from(set);
+                if (window.currentUserRole === 'department_head') {
+                    const only = String(window.currentUserDepartment || '').toLowerCase();
+                    window.activeFilters.departments = only ? [only] : [];
+                } else {
+                    const set = new Set([...(window.activeFilters && window.activeFilters.departments ? window.activeFilters.departments : []), ...depts]);
+                    window.activeFilters.departments = Array.from(set);
+                }
                 try { if (typeof activeFilters !== 'undefined') { activeFilters.departments = window.activeFilters.departments; } } catch {}
                 // refresh UI
                 if (typeof addMarkersToMap === 'function') addMarkersToMap();
@@ -2014,6 +2181,108 @@
                 payload.location = `${payload.lat},${payload.lng}`;
             }
             await addDoc(collection(dbClient, 'reports'), payload);
+        }
+
+        // Firestore update helpers
+        window.updateReportFields = async function(reportId, payload) {
+            if (!reportId) throw new Error('Missing reportId');
+            const ref = doc(dbClient, 'reports', reportId);
+            await updateDoc(ref, payload);
+        }
+
+        window.assignReport = async function(reportId) {
+            if (window.currentUserRole === 'department_head') {
+                if (typeof showToast === 'function') showToast('Only admins can assign reports to departments', 'error');
+                return;
+            }
+            try {
+                const current = (window.sampleReports||[]).find(r=>r.id===reportId);
+                const dept = prompt('Assign to department:', (current?.department||'').toString());
+                if (!dept) return;
+                await window.updateReportFields(reportId, { department: String(dept).toLowerCase(), assigned_at: serverTimestamp() });
+                showToast(`Report ${reportId} assigned to ${dept}`, 'success');
+            } catch (e) {
+                console.error(e); showToast('Failed to assign department','error');
+            }
+        }
+
+        window.changeStatus = async function(reportId) {
+            if (window.currentUserRole === 'admin') {
+                if (typeof showToast === 'function') showToast('Only department heads can change status', 'error');
+                return;
+            }
+            try {
+                const current = (window.sampleReports||[]).find(r=>r.id===reportId);
+                const status = prompt('New status (pending/in-progress/resolved/closed):', current?.status||'pending');
+                if (!status) return;
+                await window.updateReportFields(reportId, { status: String(status).toLowerCase(), status_updated_at: serverTimestamp() });
+                showToast(`Status updated to ${status}`, 'success');
+            } catch (e) {
+                console.error(e); showToast('Failed to update status','error');
+            }
+        }
+
+        // New: Assign to Department using dropdown (Admin only)
+        window.assignReportToDepartment = async function(reportId, departmentValue) {
+            if (window.currentUserRole === 'department_head') {
+                if (typeof showToast === 'function') showToast('Only admins can assign reports to departments', 'error');
+                return;
+            }
+            try {
+                const dept = String(departmentValue || '').trim();
+                if (!dept) { if (typeof showToast === 'function') showToast('Please select a department', 'error'); return; }
+                await window.updateReportFields(reportId, { department: dept.toLowerCase(), assigned_at: serverTimestamp() });
+                showToast(`Report ${reportId} assigned to ${dept}`, 'success');
+            } catch (e) {
+                console.error(e); showToast('Failed to assign department','error');
+            }
+        }
+
+        // New: Update Status using dropdown (Department Head only)
+        window.updateReportStatusSelection = async function(reportId, statusValue) {
+            if (window.currentUserRole !== 'department_head') {
+                if (typeof showToast === 'function') showToast('Only department heads can change status', 'error');
+                return;
+            }
+            try {
+                const status = String(statusValue || '').trim();
+                if (!status) { if (typeof showToast === 'function') showToast('Please select a status', 'error'); return; }
+                await window.updateReportFields(reportId, { status: status.toLowerCase(), status_updated_at: serverTimestamp() });
+                showToast(`Status updated to ${status}`, 'success');
+            } catch (e) {
+                console.error(e); showToast('Failed to update status','error');
+            }
+        }
+
+        window.setEstimatedTime = async function(reportId) {
+            if (window.currentUserRole === 'admin') {
+                if (typeof showToast === 'function') showToast('Only department heads can set ETA', 'error');
+                return;
+            }
+            try {
+                const eta = prompt('Set estimated time (e.g., 2 hours, 2025-09-30 18:00):');
+                if (!eta) return;
+                await window.updateReportFields(reportId, { estimated_time: eta });
+                showToast('Estimated time saved','success');
+            } catch (e) {
+                console.error(e); showToast('Failed to set estimated time','error');
+            }
+        }
+
+        window.addComment = async function(reportId) {
+            if (window.currentUserRole === 'admin') {
+                if (typeof showToast === 'function') showToast('Only department heads can add comments', 'error');
+                return;
+            }
+            try {
+                const text = prompt('Add comment:');
+                if (!text) return;
+                const who = (window.currentUserEmail || '') || 'admin';
+                await window.updateReportFields(reportId, { comments: arrayUnion({ text, by: who, at: new Date().toISOString() }) });
+                showToast('Comment added','success');
+            } catch (e) {
+                console.error(e); showToast('Failed to add comment','error');
+            }
         }
     </script>
     
@@ -2252,6 +2521,26 @@
                 return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]);
             });
         }
+
+        // Fullscreen image viewer
+        function openImageFullscreen(src) {
+            let overlay = document.getElementById('imageFullscreenOverlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'imageFullscreenOverlay';
+                overlay.style = 'position:fixed;inset:0;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;z-index:4000;';
+                overlay.innerHTML = '<button id="imgCloseBtn" style="position:absolute;top:16px;right:16px;background:#000;color:#fff;border:1px solid #333;border-radius:8px;padding:8px 10px;cursor:pointer;z-index:4100;"><i class="fas fa-times"></i></button><img id="imgFull" style="max-width:90vw;max-height:90vh;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,0.5);">';
+                document.body.appendChild(overlay);
+                overlay.addEventListener('click', (e)=>{ if (e.target===overlay) closeImageFullscreen(); });
+                document.getElementById('imgCloseBtn').addEventListener('click', closeImageFullscreen);
+            }
+            document.getElementById('imgFull').src = src;
+            overlay.style.display = 'flex';
+        }
+        function closeImageFullscreen(){
+            const overlay = document.getElementById('imageFullscreenOverlay');
+            if (overlay) overlay.style.display = 'none';
+        }
         
 
         // Create cluster marker
@@ -2329,6 +2618,7 @@
             );
             const timeAgo = getTimeAgo(latestReport.timestamp || latestReport.created_at);
             
+            const isAdmin = (window.currentUserRole === 'admin');
             return `
                 <div class="popup-content">
                     <div class="popup-header">
@@ -2350,7 +2640,7 @@
                     </div>
                     <div class="popup-actions">
                         <button class="popup-btn" onclick="openClusterDetail(clusters['${cluster.id}'])">View All Reports</button>
-                        <button class="popup-btn secondary" onclick="bulkAssignCluster('${cluster.id}')">Bulk Assign</button>
+                        ${isAdmin ? `<button class=\"popup-btn secondary\" onclick=\"bulkAssignCluster('${cluster.id}')\">Bulk Assign</button>` : ''}
                     </div>
                 </div>
             `;
@@ -2364,6 +2654,8 @@
             const desc = report.user_description || report.description || '';
             const title = report.title || 'Report';
             
+            const isAdmin = (window.currentUserRole === 'admin');
+            const isDeptHead = (window.currentUserRole === 'department_head');
             return `
                 <div class="popup-content">
                     <div class="popup-header">
@@ -2384,7 +2676,28 @@
                         </div>
                     </div>
                     <div class="popup-actions">
-                        <button class="popup-btn" onclick="assignReport('${report.id}')">Assign</button>
+                        ${isDeptHead 
+                            ? `<select class="filter-input" onchange="updateReportStatusSelection('${report.id}', this.value)">
+                                    <option value="">Change status...</option>
+                                    <option value="pending" ${String(report.status||'').toLowerCase()==='pending'?'selected':''}>Pending</option>
+                                    <option value="in progress" ${String(report.status||'').toLowerCase()==='in progress'?'selected':''}>In Progress</option>
+                                    <option value="completed" ${String(report.status||'').toLowerCase()==='completed'?'selected':''}>Completed</option>
+                               </select>`
+                            : `<select class="filter-input" onchange="assignReportToDepartment('${report.id}', this.value)">
+                                    <option value="">Assign to department...</option>
+                                    <option>Roads and Bridges PWD</option>
+                                    <option>Street Lighting / Electrical Department</option>
+                                    <option>Water Supply & Sewerage Department</option>
+                                    <option>Solid Waste Management (SWM)</option>
+                                    <option>Public Health & Sanitation</option>
+                                    <option>Public Transport</option>
+                                    <option>Parks & Horticulture Department</option>
+                                    <option>Noise & Pollution Control Cell</option>
+                                    <option>Fire & Emergency Services</option>
+                                    <option>Education Department</option>
+                                    <option>Health Department</option>
+                                    <option>Legal & Estate Department</option>
+                               </select>`}
                         <button class="popup-btn secondary" onclick="openReportDetail(sampleReports.find(r => r.id === '${report.id}'))">Details</button>
                     </div>
                 </div>
@@ -2453,6 +2766,59 @@
             modal.classList.add('active');
         }
 
+        function expandFixBox(reportId) {
+            const box = document.getElementById(`fixBox_${reportId}`);
+            if (!box) return;
+            box.classList.remove('collapsed');
+            box.classList.add('expanded');
+            const btn = document.getElementById(`fixAction_${reportId}`);
+            if (btn) btn.style.display = 'inline-block';
+            // Auto-trigger generation on first expand
+            generateFixes(reportId);
+        }
+
+        async function generateFixes(reportId) {
+            try {
+                const fixContent = document.getElementById(`fixContent_${reportId}`);
+                const captionEl = document.getElementById(`captionBox_${reportId}`);
+                const btn = document.getElementById(`fixAction_${reportId}`);
+                const report = (typeof sampleReports !== 'undefined') ? sampleReports.find(r => r.id === reportId) : null;
+                const userDesc = report ? (report.user_description || report.description || '') : '';
+                const imageCaption = captionEl ? captionEl.textContent.trim() : '';
+                if (btn) { btn.disabled = true; btn.textContent = 'Generating...'; }
+                if (fixContent) fixContent.textContent = 'Generating suggestions...';
+
+                const form = new FormData();
+                form.append('report_id', reportId);
+                form.append('image_caption', imageCaption);
+                form.append('user_description', userDesc);
+
+                const res = await fetch('/api/reports/generate_fixes', {
+                    method: 'POST',
+                    body: form,
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.error || 'Failed to generate');
+                }
+                const text = data.suggestions || '';
+                if (fixContent) {
+                    fixContent.textContent = text;
+                }
+                // Update local cache so reopening shows latest
+                if (report) {
+                    report.ai_fix_suggestions = text;
+                }
+                showToast('AI fix suggestions generated and saved', 'success');
+            } catch (err) {
+                showToast('Error generating suggestions: ' + (err && err.message ? err.message : err), 'error');
+            } finally {
+                const btn = document.getElementById(`fixAction_${reportId}`);
+                if (btn) { btn.disabled = false; btn.textContent = 'Generate / Refresh'; }
+            }
+        }
+
         // Open individual report detail
         function openReportDetail(report) {
             const modal = document.getElementById('modalOverlay');
@@ -2466,48 +2832,147 @@
 
             title.textContent = detailTitle;
 
+            const isDeptHead = (window.currentUserRole === 'department_head');
+            const isAdmin = (window.currentUserRole === 'admin');
             content.innerHTML = `
-                <div class="report-detail">
+                <div class="report-detail" style="padding: 3px; overflow-y: auto;">
                     <div class="report-detail-header">
                         <div class="report-id">Report ID: ${reportData.id}</div>
                         <span class="priority-badge priority-${reportData.priority}">${reportData.priority.replace('-', ' ')}</span>
                     </div>
-                    <img src="${img}" alt="${detailTitle}" class="report-detail-image" />
-                    <div class="report-section">
-                        <h4>Summary</h4>
-                        <p>${desc}</p>
-                    </div>
-                    <div class="report-section">
-                        <h4>Details</h4>
-                        <div class="detail-grid">
-                            <div>
-                                <div class="detail-label">Department</div>
-                                <div class="detail-value">${reportData.department}</div>
-                            </div>
-                            <div>
-                                <div class="detail-label">City</div>
-                                <div class="detail-value">${reportData.city || ''}</div>
-                            </div>
-                            <div>
-                                <div class="detail-label">Location</div>
-                                <div class="detail-value">${reportData.location || `${reportData.lat || ''}, ${reportData.lng || ''}`}</div>
-                            </div>
-                            <div>
-                                <div class="detail-label">Status</div>
-                                <div class="detail-value">${reportData.status}</div>
+                    <div class="report-layout">
+                        <div class="media-column">
+                            <img src="${img}" alt="${detailTitle}" class="report-detail-image" onclick="openImageFullscreen('${img}')"/>
+                            <div class="panel-box">
+                                <div class="panel-header-row"><h4 style="margin:0">Summary</h4></div>
+                                <div style="max-height:120px;overflow:auto;">${escapeHtml(desc)}</div>
                             </div>
                         </div>
-                        <div class="action-buttons">
-                            <button class="filter-btn btn-primary" onclick="assignReport('${reportData.id}')">Assign to Department</button>
-                            <button class="filter-btn btn-secondary" onclick="changeStatus('${reportData.id}')">Change Status</button>
-                            <button class="filter-btn btn-secondary" onclick="addComment('${reportData.id}')">Add Comment</button>
-                            <button class="filter-btn btn-secondary" onclick="exportReport('${reportData.id}')">Export Report</button>
+                        <div class="info-column">
+                            <div class="panel-box">
+                                <div class="panel-header-row"><h4 style="margin:0">Image Caption</h4></div>
+                                <div id="captionBox_${reportData.id}" class="caption-scroll">${escapeHtml(reportData.image_caption || 'No caption available yet.')}</div>
+                            </div>
+                            <div class="panel-box">
+                                <div class="panel-header-row"><h4 style="margin:0">Details</h4></div>
+                                <div class="detail-grid">
+                                    <div>
+                                        <div class="detail-label">Department</div>
+                                        <div class="detail-value">${reportData.department}</div>
+                                    </div>
+                                    <div>
+                                        <div class="detail-label">City</div>
+                                        <div class="detail-value">${reportData.city || ''}</div>
+                                    </div>
+                                    <div>
+                                        <div class="detail-label">Location</div>
+                                        <div class="detail-value">${reportData.location || `${reportData.lat || ''}, ${reportData.lng || ''}`}</div>
+                                    </div>
+                                    <div>
+                                        <div class="detail-label">Status</div>
+                                        <div class="detail-value">${reportData.status}</div>
+                                    </div>
+                                </div>
+                                <div class="action-buttons" style="margin-top:14px;">
+                                    ${isDeptHead 
+                                        ? `<div style="display:flex;gap:8px;align-items:center;"> 
+                                                <label class="detail-label" style="min-width:110px;">Status</label>
+                                                <select class="filter-input" style="max-width:200px;" onchange="updateReportStatusSelection('${reportData.id}', this.value)">
+                                                    <option value="">Select status...</option>
+                                                    <option value="pending" ${String(reportData.status||'').toLowerCase()==='pending'?'selected':''}>Pending</option>
+                                                    <option value="in progress" ${String(reportData.status||'').toLowerCase()==='in progress'?'selected':''}>In Progress</option>
+                                                    <option value="completed" ${String(reportData.status||'').toLowerCase()==='completed'?'selected':''}>Completed</option>
+                                                </select>
+                                           </div>`
+                                        : `<div style="display:flex;gap:8px;align-items:center;"> 
+                                                <label class="detail-label" style="min-width:110px;">Assign to</label>
+                                                <select class="filter-input" style="max-width:240px;" onchange="assignReportToDepartment('${reportData.id}', this.value)">
+                                                    <option value="">Select department...</option>
+                                                    <option>Roads and Bridges PWD</option>
+                                                    <option>Street Lighting / Electrical Department</option>
+                                                    <option>Water Supply & Sewerage Department</option>
+                                                    <option>Solid Waste Management (SWM)</option>
+                                                    <option>Public Health & Sanitation</option>
+                                                    <option>Public Transport</option>
+                                                    <option>Parks & Horticulture Department</option>
+                                                    <option>Noise & Pollution Control Cell</option>
+                                                    <option>Fire & Emergency Services</option>
+                                                    <option>Education Department</option>
+                                                    <option>Health Department</option>
+                                                </select>
+                                           </div>`}
+                                    <button class="filter-btn btn-secondary" onclick="addComment('${reportData.id}')">Add Comment</button>
+                                    <button class="filter-btn btn-secondary" onclick="setEstimatedTime('${reportData.id}')">Set ETA</button>
+                                    <button class="filter-btn btn-secondary" onclick="exportReport('${reportData.id}')">Export Report</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Ask Gemini FAB and expandable panel placed directly under modal content -->
+                        <div style="margin-top:12px; display:flex; justify-content:flex-end; gap:12px; align-items:center;">
+                            <button id="aiFab_${reportData.id}" class="ai-fab" onclick="openAIFixes('${reportData.id}')"><i class="fa-solid fa-wand-magic-sparkles"></i> Fix this issue with AI!</button>
+                        </div>
+                        <div id="aiPanel_${reportData.id}" class="ai-panel">
+                            <div class="header"><i class="fa-solid fa-screwdriver-wrench"></i> AI Suggestions</div>
+                            <div id="aiPanelContent_${reportData.id}" class="ai-panel-content">Click the button above to generate actionable fixes tailored for Indian civic constraints.</div>
                         </div>
                     </div>
                 </div>
             `;
             
             modal.classList.add('active');
+        }
+
+        function openAIFixes(reportId) {
+            const fab = document.getElementById(`aiFab_${reportId}`);
+            const panel = document.getElementById(`aiPanel_${reportId}`);
+            if (fab) {
+                fab.style.pointerEvents = 'none';
+                fab.style.opacity = '0.0';
+                setTimeout(()=>{ if (fab) fab.style.display='none'; }, 300);
+            }
+            if (panel) {
+                panel.classList.add('open');
+            }
+            // Auto-generate on open
+            generateFixes(reportId);
+        }
+
+        async function generateFixes(reportId) {
+            try {
+                const fixContent = document.getElementById(`aiPanelContent_${reportId}`);
+                const captionEl = document.getElementById(`captionBox_${reportId}`);
+                const report = (typeof sampleReports !== 'undefined') ? sampleReports.find(r => r.id === reportId) : null;
+                const userDesc = report ? (report.user_description || report.description || '') : '';
+                const imageCaption = captionEl ? captionEl.textContent.trim() : '';
+                if (fixContent) fixContent.textContent = 'Generating suggestions...';
+
+                const form = new FormData();
+                form.append('report_id', reportId);
+                form.append('image_caption', imageCaption);
+                form.append('user_description', userDesc);
+
+                const res = await fetch('/api/reports/generate_fixes', {
+                    method: 'POST',
+                    body: form,
+                    credentials: 'include'
+                });
+                const data = await res.json();
+                if (!res.ok || !data.ok) {
+                    throw new Error(data.error || 'Failed to generate');
+                }
+                const text = data.suggestions || '';
+                if (fixContent) {
+                    fixContent.textContent = text;
+                }
+                // Update local cache so reopening shows latest
+                if (report) {
+                    report.ai_fix_suggestions = text;
+                }
+                showToast('AI fix suggestions generated and saved', 'success');
+            } catch (err) {
+                showToast('Error generating suggestions: ' + (err && err.message ? err.message : err), 'error');
+            } finally {}
         }
 
         // Utility function to get time ago
@@ -2707,14 +3172,16 @@
         }
 
         function assignReport(reportId) {
-            const department = prompt('Assign to department:', 'Roads & Transport');
-            if (department) {
-                showToast(`Report ${reportId} assigned to ${department}`, 'success');
-                closeModal();
+            if (typeof window.assignReport === 'function') {
+                return window.assignReport(reportId);
             }
         }
 
         function bulkAssignCluster(clusterId) {
+            if (window.currentUserRole !== 'admin') {
+                showToast('Only admins can bulk assign', 'error');
+                return;
+            }
             const department = prompt('Assign entire cluster to department:', 'Roads & Transport');
             if (department) {
                 showToast(`All reports in cluster ${clusterId} assigned to ${department}`, 'success');
@@ -2723,16 +3190,14 @@
         }
 
         function changeStatus(reportId) {
-            const status = prompt('New status:', 'In Progress');
-            if (status) {
-                showToast(`Report ${reportId} status changed to ${status}`, 'success');
+            if (typeof window.changeStatus === 'function') {
+                return window.changeStatus(reportId);
             }
         }
 
         function addComment(reportId) {
-            const comment = prompt('Add comment:');
-            if (comment) {
-                showToast('Comment added successfully', 'success');
+            if (typeof window.addComment === 'function') {
+                return window.addComment(reportId);
             }
         }
 

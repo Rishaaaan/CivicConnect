@@ -2,3 +2,5 @@ Django==5.2.6
 firebase_admin==7.1.0
 protobuf==6.32.1
 gunicorn
+gradio_client
+google-generativeai
