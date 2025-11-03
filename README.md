@@ -3,3 +3,6 @@
 
 ### username: admintester00@gmail.com
 ### password: AdminTester00
+
+
+might be some errors in loading previous made reports but you can add reports via our mobile app
