@@ -1,5 +1,17 @@
-## CivicSetu <img src="media/1.jpg" alt="CivicSetu Logo" width="120" height="120" style="float: right; margin-left: 80%;" />
+<!-- README.md for CivicSetu -->
+<!-- Header: table layout is a reliable way to place title left and logo fully right-aligned on GitHub README -->
+<table width="100%"><tr>
+<td>
+
+# CivicSetu
 *A Crowdsourced Civic Issue Reporting and Resolution System*
+
+</td>
+<td align="right" valign="top">
+<!-- keep image filename/path as in your repo -->
+<img src="media/1.jpg" alt="CivicSetu Logo" width="120" height="120" style="display:block;" />
+</td>
+</tr></table>
 
 ***
 
@@ -16,18 +28,27 @@
 
 ## User Interface
 
+> **Note:** screenshots below are placed inside responsive containers and set to expand to the available horizontal space (up to a sensible max-width) so they appear large on desktop but still scale on small screens.
+
 ### Admin Login
 
 Admins securely log in to manage reports, monitor activity, and track overall system usage.
 
-<img src="media/image1.jpeg" alt="Admin Login" width="600" />
+<div align="center" style="width:100%;max-width:1200px;margin:0 auto;">
+  <img src="media/image1.jpeg" alt="Admin Login" style="width:100%;height:auto;display:block;" />
+</div>
 
 ### Dashboard Overview
 
 Provides a snapshot of total issues, categories, status, and quick access to pending actions.
 
-<img src="media/image2.jpeg" alt="Dashboard Overview" width="600" />  
-<img src="media/image3.jpeg" alt="Dashboard Detailed View" width="600" />
+<div align="center" style="width:100%;max-width:1200px;margin:0 auto;">
+  <img src="media/image2.jpeg" alt="Dashboard Overview" style="width:100%;height:auto;display:block;" />
+</div>
+
+<div align="center" style="width:100%;max-width:1200px;margin:0 auto;">
+  <img src="media/image3.jpeg" alt="Dashboard Detailed View" style="width:100%;height:auto;display:block;" />
+</div>
 
 ### Navigating the Interface
 
@@ -35,27 +56,39 @@ Simple, mobile-first design ensures users and admins can move between sections e
 
 ### Registration of User
 
-<img src="media/image4.jpeg" alt="User Registration" width="600" />
+<div align="center" style="width:100%;max-width:1200px;margin:0 auto;">
+  <img src="media/image4.jpeg" alt="User Registration" style="width:100%;height:auto;display:block;" />
+</div>
 
 ### Creating a Report
 
-<img src="media/image5.jpeg" alt="Creating a Report" width="600" />
+<div align="center" style="width:100%;max-width:1200px;margin:0 auto;">
+  <img src="media/image5.jpeg" alt="Creating a Report" style="width:100%;height:auto;display:block;" />
+</div>
 
 ### Filtering Reports
 
-<img src="media/image6.jpeg" alt="Filtering Reports" width="600" />
+<div align="center" style="width:100%;max-width:1200px;margin:0 auto;">
+  <img src="media/image6.jpeg" alt="Filtering Reports" style="width:100%;height:auto;display:block;" />
+</div>
 
 ### Navigation
 
-<img src="media/image7.jpeg" alt="Navigation" width="600" />
+<div align="center" style="width:100%;max-width:1200px;margin:0 auto;">
+  <img src="media/image7.jpeg" alt="Navigation" style="width:100%;height:auto;display:block;" />
+</div>
 
 ### Department Visibility
 
-<img src="media/image8.jpeg" alt="Department Visibility" width="600" />
+<div align="center" style="width:100%;max-width:1200px;margin:0 auto;">
+  <img src="media/image8.jpeg" alt="Department Visibility" style="width:100%;height:auto;display:block;" />
+</div>
 
 ### Priority View
 
-<img src="media/image9.jpeg" alt="Priority View" width="600" />
+<div align="center" style="width:100%;max-width:1200px;margin:0 auto;">
+  <img src="media/image9.jpeg" alt="Priority View" style="width:100%;height:auto;display:block;" />
+</div>
 
 ***
 
@@ -249,6 +282,3 @@ The team is currently focused on:
 CivicSetu is more than a reporting tool; it is a catalyst for clean, green, and accountable governance. By blending cutting-edge AI technology with active citizen participation, it transforms how local governments respond to everyday challenges.
 
 The solution aligns with the SIH 2025 theme of Clean & Green Technology and directly addresses Problem Statement ID 25031. With its focus on scalability, sustainability, and innovation, CivicSetu can become a model civic-tech platform for India, empowering citizens and authorities to collaboratively build a better future.
-[8](https://blog.markdowntools.com/posts/markdown-change-image-size)
-[9](https://www.educative.io/answers/how-to-change-image-size-in-markdown)
-[10](https://github.com/hakimel/reveal.js/issues/1349)
