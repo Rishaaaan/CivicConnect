@@ -1,4 +1,4 @@
-<span style="font-size:72px; font-weight:bold; vertical-align:middle;">CivicSetu                        </span><img src="media/1.jpg" alt="CivicSetu Logo" width="120" height="120" />   
+##CivicSetu<img src="media/1.jpg" alt="CivicSetu Logo" width="120" height="120" />   
 *A Crowdsourced Civic Issue Reporting and Resolution System*
 
 ***
